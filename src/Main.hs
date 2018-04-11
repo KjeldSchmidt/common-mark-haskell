@@ -1,9 +1,16 @@
 import Data.Char (ord, chr)
+import Data.List.Split (splitWhen)
+
+data CharacterType = Space | Tab | NewLine | CarriageReturn | WhiteSpace | UnicodeWhiteSpace | ASCIIPunctuation | UnicodePunctuation | GenericChar | EOF deriving (Show)
+data LineType = Blank | WhiteSpaceLine | UnicodeWhiteSpaceLine | GenericLine deriving (Show)
+data Construct = Container | Leaf deriving (Show)
+data BlockType = Paragraph | Quotation | List | Heading | Rules | Code deriving (Show)
+data LeafBlock = ThematicBreak deriving (Show)
 
 main :: IO()
 main = do
-    a <- getLine
-    putStrLn . show . tagChars . replace $ a
+    a <- getContents
+    putStrLn . show . splitLines . tagChars . replace $ a
     return ()
 
 replace :: String -> String
@@ -22,6 +29,15 @@ tagChars = map (\x -> (x, (tag . ord) x))
             | x `elem` asciiPunctuation = ASCIIPunctuation
             | x `elem` unicodePunctuation = UnicodePunctuation
             | otherwise = GenericChar
+
+splitLines :: [(Char, CharacterType)] -> [[(Char, CharacterType)]]
+splitLines = splitWhen (\(x, ct) -> isNewline ct)
+    where
+        isNewline NewLine = True
+        isNewline CarriageReturn = True
+        isNewline _ = False
+
+
 
 asciiPunctuation :: [Int]
 asciiPunctuation = map ord ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~']
@@ -42,13 +58,6 @@ unicodeGeneralCategory name
 
 ugc = unicodeGeneralCategory
 
-
-
-data CharacterType = Space | Tab | NewLine | CarriageReturn | WhiteSpace | UnicodeWhiteSpace | ASCIIPunctuation | UnicodePunctuation | GenericChar | EOF deriving (Show)
-data LineType = Blank | WhiteSpaceLine | UnicodeWhiteSpaceLine | GenericLine deriving (Show)
-data Construct = Container | Leaf deriving (Show)
-data BlockType = Paragraph | Quotation | List | Heading | Rules | Code deriving (Show)
-data LeafBlock = ThematicBreak deriving (Show)
 
 -- Parsing in two steps: First, block structure, second, inline structure
 
