@@ -10,7 +10,7 @@ data LeafBlock = ThematicBreak deriving (Show)
 main :: IO()
 main = do
     a <- getContents
-    putStrLn . show . splitLines . tagChars . replace $ a
+    putStrLn . show . tagLines . splitLines . tagChars . replace $ a
     return ()
 
 replace :: String -> String
@@ -29,6 +29,16 @@ tagChars = map (\x -> (x, (tag . ord) x))
             | x `elem` asciiPunctuation = ASCIIPunctuation
             | x `elem` unicodePunctuation = UnicodePunctuation
             | otherwise = GenericChar
+
+tagLines :: [[(Char, CharacterType)]] -> [(LineType, [(Char, CharacterType)])]
+tagLines = map (\line -> (tag line, line))
+    where
+        tag x
+            | length x == 0 || all (\(y, _) -> (ord y) `elem` [9, 32]) x = Blank
+            | all (\(y, _) -> (ord y) `elem` [9, 11, 12, 32]) x = WhiteSpaceLine
+            | all (\(y, _) -> (ord y) `elem` (ugc "Zs")) x = UnicodeWhiteSpaceLine
+            | otherwise = GenericLine
+
 
 splitLines :: [(Char, CharacterType)] -> [[(Char, CharacterType)]]
 splitLines = splitWhen (\(x, ct) -> isNewline ct)
@@ -60,4 +70,3 @@ ugc = unicodeGeneralCategory
 
 
 -- Parsing in two steps: First, block structure, second, inline structure
-
