@@ -7,6 +7,9 @@ data Construct = Container | Leaf deriving (Show)
 data BlockType = Paragraph | Quotation | List | Heading | Rules | Code deriving (Show)
 data LeafBlock = ThematicBreak deriving (Show)
 
+type TaggedChar = (Char, CharacterType)
+type TaggedLine = (LineType, [TaggedChar])
+
 main :: IO()
 main = do
     a <- getContents
@@ -16,7 +19,7 @@ main = do
 replace :: String -> String
 replace = map (\x -> if ord x /= 0 then x else chr 65533 )
 
-tagChars :: [Char] -> [(Char, CharacterType)]
+tagChars :: [Char] -> [TaggedChar]
 tagChars = map (\x -> (x, (tag . ord) x))
     where
         tag x
@@ -30,7 +33,7 @@ tagChars = map (\x -> (x, (tag . ord) x))
             | x `elem` unicodePunctuation = UnicodePunctuation
             | otherwise = GenericChar
 
-tagLines :: [[(Char, CharacterType)]] -> [(LineType, [(Char, CharacterType)])]
+tagLines :: [[TaggedChar]] -> [TaggedLine]
 tagLines = map (\line -> (tag line, line))
     where
         tag x
@@ -40,14 +43,14 @@ tagLines = map (\line -> (tag line, line))
             | otherwise = GenericLine
 
 
-splitLines :: [(Char, CharacterType)] -> [[(Char, CharacterType)]]
+splitLines :: [TaggedChar] -> [[TaggedChar]]
 splitLines = splitWhen (\(x, ct) -> isNewline ct)
     where
         isNewline NewLine = True
         isNewline CarriageReturn = True
         isNewline _ = False
 
-printContent :: [(LineType, [(Char, CharacterType)])] -> String
+printContent :: [TaggedLine] -> String
 printContent xs = concatMap (\x -> map fst (snd x)) xs
 
 asciiPunctuation :: [Int]
