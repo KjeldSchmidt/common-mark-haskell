@@ -10,7 +10,7 @@ data LeafBlock = ThematicBreak deriving (Show)
 main :: IO()
 main = do
     a <- getContents
-    putStrLn . show . tagLines . splitLines . tagChars . replace $ a
+    putStrLn . printContent . tagLines . splitLines . tagChars . replace $ a
     return ()
 
 replace :: String -> String
@@ -47,7 +47,8 @@ splitLines = splitWhen (\(x, ct) -> isNewline ct)
         isNewline CarriageReturn = True
         isNewline _ = False
 
-
+printContent :: [(LineType, [(Char, CharacterType)])] -> String
+printContent xs = concatMap (\x -> map fst (snd x)) xs
 
 asciiPunctuation :: [Int]
 asciiPunctuation = map ord ['!', '"', '#', '$', '%', '&', '\'', '(', ')', '*', '+', ',', '-', '.', '/', ':', ';', '<', '=', '>', '?', '@', '[', '\\', ']', '^', '_', '`', '{', '|', '}', '~']
