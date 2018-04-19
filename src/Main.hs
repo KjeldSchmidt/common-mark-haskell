@@ -4,7 +4,7 @@ import Data.List.Split (splitWhen)
 data CharacterType = Space | Tab | NewLine | CarriageReturn | WhiteSpace | UnicodeWhiteSpace | ASCIIPunctuation | UnicodePunctuation | GenericChar | EOF deriving (Show)
 data LineType = Blank | WhiteSpaceLine | UnicodeWhiteSpaceLine | GenericLine deriving (Show)
 data Construct = Container | Leaf deriving (Show)
-data BlockType = Paragraph | Quotation | List | Heading | Rules | Code deriving (Show)
+data BlockType = Paragraph | BlockQuote | OrderedList | UnorderedList | Heading | Rules | Code | Inline deriving (Show)
 data LeafBlock = ThematicBreak deriving (Show)
 
 type TaggedChar = (Char, CharacterType)
@@ -41,6 +41,18 @@ tagLines = map (\line -> (tag line, line))
             | all (\(y, _) -> (ord y) `elem` [9, 11, 12, 32]) x = WhiteSpaceLine
             | all (\(y, _) -> (ord y) `elem` (ugc "Zs")) x = UnicodeWhiteSpaceLine
             | otherwise = GenericLine
+
+tagBlock :: [TaggedLine] -> [(BlockType, TaggedLine)]
+tagBlock = map (\line -> (tag line, line))
+    where
+        tag x
+            | hasBlockQuoteStart x = BlockQuote
+            | hasUnorderedListStart x = UnorderedList
+            | hasOrderedListStart x = OrderedList
+	    | otherwise = Inline
+        hasOrderedListStart = False
+        hasBlockQuoteStart x = head x == '>'
+        hasUnorderedListStart x = x `elem` ['+', '-', '*']
 
 
 splitLines :: [TaggedChar] -> [[TaggedChar]]
